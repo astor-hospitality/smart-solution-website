@@ -60,3 +60,48 @@
   });
   window.addEventListener('ss:form-telegram-open', function () { goal('form_telegram_open'); });
 })();
+
+/* Google Analytics: separate opt-in; no form data, query strings or full referrers. */
+(function () {
+  'use strict';
+  if (!['smart-soultion.com', 'www.smart-soultion.com'].includes(location.hostname)) return;
+  var key = 'ss-google-analytics-consent-v1', tag = 'G-0YX4ML38RM', started = false, panel;
+  function read() { try { return localStorage.getItem(key); } catch (_) { return null; } }
+  function save(value) { try { localStorage.setItem(key, value); } catch (_) {} }
+  function start() {
+    if (started || read() !== 'yes') return;
+    started = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var path = location.pathname;
+    if (!/^\/(?:|team\/?|services\/?|services\/[a-z0-9-]+\/?)$/.test(path)) path = '/other';
+    var ref = ''; try { ref = document.referrer ? new URL(document.referrer).origin : ''; } catch (_) {}
+    window.gtag('js', new Date());
+    window.gtag('config', tag, {send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
+      page_location: location.origin + path, page_referrer: ref});
+    window.gtag('event', 'page_view', {page_location: location.origin + path, page_title: 'Smart Solution', page_referrer: ref});
+    var script = document.createElement('script'); script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + tag;
+    document.head.appendChild(script);
+  }
+  function show() {
+    if (panel) return;
+    panel = document.createElement('section');
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Google Analytics');
+    panel.style.cssText = 'position:fixed;z-index:10001;left:16px;bottom:16px;max-width:420px;padding:20px;background:#fff;color:#111;border:1px solid #555;border-radius:14px;box-shadow:0 8px 32px #0004;font:14px/1.5 system-ui';
+    panel.innerHTML = '<strong>Разрешить аналитику Google?</strong><p>Google Analytics получит технические данные о посещении и cookie; данные могут передаваться за пределы России. Формы и текст сообщений не передаются. Сайт работает и без аналитики; выбор можно изменить кнопкой «Google Analytics».</p><button type="button" data-choice="no">Не разрешать</button> <button type="button" data-choice="yes">Разрешить Google</button>';
+    panel.querySelectorAll('button').forEach(function (button) { button.onclick = function () {
+      var value = button.getAttribute('data-choice'); save(value); panel.remove(); panel = null;
+      if (value === 'yes') start(); else if (started) location.reload();
+    }; });
+    document.body.appendChild(panel);
+  }
+  var button = document.createElement('button'); button.type = 'button'; button.textContent = 'Google Analytics';
+  button.style.cssText = 'display:block;margin:16px auto;padding:8px 12px;border:1px solid #aaa;border-radius:8px;background:#fff;color:#222;cursor:pointer';
+  button.onclick = show; (document.querySelector('footer') || document.body).appendChild(button);
+  if (read() === 'yes') start();
+  else if (read() !== 'no') {
+    var observer = new MutationObserver(function () { if (!document.querySelector('.ss-consent')) { observer.disconnect(); show(); } });
+    if (document.querySelector('.ss-consent')) observer.observe(document.body, {childList:true, subtree:true}); else show();
+  }
+})();

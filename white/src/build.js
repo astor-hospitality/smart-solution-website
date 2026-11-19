@@ -70,6 +70,7 @@ const parts = {
   SMART_CSS: fs.readFileSync(path.join(dir, "smart.css"), "utf8").trim(),
 };
 copy('analytics.js');
+copy('group-analytics.js');
 for (const f of ["og.png", "apple-touch-icon.png"]) if (fs.existsSync(path.join(dir, "assets", f))) copy(f);
 for (const f of fs.readdirSync(path.join(dir, "assets"))) if (f.startsWith("team-")) copy(f); // other team photos (Yana)
 
